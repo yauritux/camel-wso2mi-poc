@@ -1,0 +1,89 @@
+services:
+
+  eipoc-db:
+    image: postgres:14
+    container_name: eipoc-db
+    hostname: eipoc_db
+    networks:
+      - eipocnet
+    environment:
+      POSTGRES_USER: "${EIPOC_PG_USER}"
+      POSTGRES_PASSWORD: "${EIPOC_PG_PASSWORD}"
+      POSTGRES_DB: "${EIPOC_PG_DB}"
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-d", "eipoc"]
+      interval: 30s
+      timeout: 60s
+      retries: 5
+      start_period: 80s
+    volumes:
+      - ./eipoc-data:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
+  
+  kafka-1:
+    image: bitnami/kafka:3.3
+    container_name: kafka-1
+    networks:
+      - eipocnet
+    environment:
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka-1:9092,EXTERNAL://localhost:9094
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka-1:9093,1@kafka-2:9093,2@kafka-3:9093
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_KRAFT_CLUSTER_ID=r4zt_wrqTRuT7W2NJsB_GA
+    ports:
+      - 9094:9094
+  kafka-2:
+    image: bitnami/kafka:3.3
+    container_name: kafka-2
+    networks:
+      - eipocnet
+    environment:
+      - KAFKA_CFG_NODE_ID=1
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka-2:9092,EXTERNAL://localhost:9194
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka-1:9093,1@kafka-2:9093,2@kafka-3:9093
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_KRAFT_CLUSTER_ID=r4zt_wrqTRuT7W2NJsB_GA
+    ports:
+      - 9194:9094
+
+  kafka-3:
+    image: bitnami/kafka:3.3
+    container_name: kafka-3
+    networks:
+      - eipocnet
+    environment:
+      - KAFKA_CFG_NODE_ID=2
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka-3:9092,EXTERNAL://localhost:9294
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka-1:9093,1@kafka-2:9093,2@kafka-3:9093
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_KRAFT_CLUSTER_ID=r4zt_wrqTRuT7W2NJsB_GA
+    ports:
+      - 9294:9094
+
+  kafka-ui:
+    container_name: kafka-ui
+    image: 'provectuslabs/kafka-ui:latest'
+    networks:
+      - eipocnet
+    ports:
+      - "8080:8080"
+    environment:
+      - KAFKA_CLUSTERS_0_BOOTSTRAP_SERVERS=kafka-1:9092
+      - KAFKA_CLUSTERS_0_NAME=r4zt_wrqTRuT7W2NJsB_GA
+
+networks:
+  eipocnet:
+    driver: bridge
+  

@@ -1,0 +1,9 @@
+server:
+  port: 9000
+spring:
+  application:
+    name: camelservicepoc
+
+chess:
+  api:
+    url: "https://api.chess.com/pub"
