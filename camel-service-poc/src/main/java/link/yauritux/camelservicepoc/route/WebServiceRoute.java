@@ -32,6 +32,11 @@ public class WebServiceRoute extends RouteBuilder {
                 .recipientList(simple(chessApiUrl + "/player/${body}/stats?httpMethod=GET"))
                 .unmarshal().json(JsonLibrary.Jackson, ChessPlayerStatistic.class)
                 .bean(PlayerSummaryProcessor.class)
+                .marshal().json(JsonLibrary.Jackson)
+                .convertBodyTo(String.class)
+                .setHeader("data", body())
+                .setBody(simple("INSERT INTO camel_archive_db(id, data) values(uuid_generate_v4(), cast(:?data as json))"))
+                .to("jdbc:dataSource?useHeadersAsParameters=true")
                 .end()
                 .setBody(simple("${body}"));
     }
