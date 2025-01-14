@@ -23,6 +23,10 @@ public class WebServiceRoute extends RouteBuilder {
     public void configure() throws Exception {
         from("direct:fetchChessPlayers")
                 .routeId("chess-api-route")
+                .process(exchange -> {
+                    long start = System.currentTimeMillis();
+                    exchange.setProperty("startTime", start);
+                })
                 .to(chessApiUrl + "/titled/GM")
                 .unmarshal().json(JsonLibrary.Jackson, ChessPlayer.class)
                 .bean(PlayerFilteringProcessor.class)
@@ -34,8 +38,15 @@ public class WebServiceRoute extends RouteBuilder {
                 .bean(PlayerSummaryProcessor.class)
                 .marshal().json(JsonLibrary.Jackson)
                 .convertBodyTo(String.class)
+                .process(exchange -> {
+                    long stepStartTime = exchange.getProperty("startTime", Long.class);
+                    long end = System.currentTimeMillis();
+                    long timeMs = end - stepStartTime;
+                    exchange.setProperty("time_ms", timeMs);
+                    exchange.getMessage().setHeader("time_ms", timeMs);
+                })
                 .setHeader("data", body())
-                .setBody(simple("INSERT INTO camel_archive_db(id, data) values(uuid_generate_v4(), cast(:?data as json))"))
+                .setBody(simple("INSERT INTO camel_archive_db(id, data, time_ms) values(uuid_generate_v4(), cast(:?data as json), :?time_ms)"))
                 .to("jdbc:dataSource?useHeadersAsParameters=true")
                 .end()
                 .setBody(simple("${body}"));
