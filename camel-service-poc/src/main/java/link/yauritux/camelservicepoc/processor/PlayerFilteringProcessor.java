@@ -1,4 +1,4 @@
-package link.yauritux.camelservicepoc.bean;
+package link.yauritux.camelservicepoc.processor;
 
 import link.yauritux.camelservicepoc.dto.ChessPlayer;
 import link.yauritux.camelservicepoc.util.RandomAlpha;

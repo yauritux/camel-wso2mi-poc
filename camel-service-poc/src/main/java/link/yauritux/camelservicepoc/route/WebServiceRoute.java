@@ -1,13 +1,18 @@
 package link.yauritux.camelservicepoc.route;
 
-import link.yauritux.camelservicepoc.bean.PlayerFilteringProcessor;
-import link.yauritux.camelservicepoc.bean.PlayerSummaryProcessor;
+import link.yauritux.camelservicepoc.processor.PlayerFilteringProcessor;
+import link.yauritux.camelservicepoc.processor.PlayerSummaryProcessor;
 import link.yauritux.camelservicepoc.dto.ChessPlayer;
 import link.yauritux.camelservicepoc.dto.ChessPlayerStatistic;
+import org.apache.camel.Exchange;
+import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.http.base.HttpOperationFailedException;
 import org.apache.camel.model.dataformat.JsonLibrary;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import java.util.Map;
 
 /**
  * @author Yauri Attamimi
@@ -21,6 +26,30 @@ public class WebServiceRoute extends RouteBuilder {
 
     @Override
     public void configure() throws Exception {
+        // Define the retry mechanism for 429 responses
+        onException(HttpOperationFailedException.class)
+                .onWhen(exchange -> {
+                    HttpOperationFailedException exception = exchange.getProperty(Exchange.EXCEPTION_CAUGHT, HttpOperationFailedException.class);
+                    return exception != null && exception.getStatusCode() == 429; // Retry only for HTTP 429
+                })
+                .maximumRedeliveries(3) // Retry 3 times
+                .redeliveryDelay(3000) // Wait 3 seconds between retries
+                .backOffMultiplier(2) // Exponential backoff
+                .retryAttemptedLogLevel(LoggingLevel.WARN)
+                .logRetryAttempted(true)
+                .handled(false);
+
+        errorHandler(defaultErrorHandler()
+                .maximumRedeliveries(3)
+                .redeliveryDelay(3000)
+                .backOffMultiplier(2)
+                .retryAttemptedLogLevel(LoggingLevel.WARN)
+                .onRedelivery(exchange -> {
+                    Integer attemptCount = exchange.getIn().getHeader(Exchange.REDELIVERY_COUNTER, Integer.class);
+                    log.warn("Retrying attempt {} for URL: {}", attemptCount, exchange.getIn().getHeader(Exchange.HTTP_URI));
+                })
+        );
+
         from("direct:fetchChessPlayers")
                 .routeId("chess-api-route")
                 .process(exchange -> {
@@ -59,5 +88,30 @@ public class WebServiceRoute extends RouteBuilder {
         from("direct:sendToKafka")
                 .routeId("kafka-producer-route")
                 .to("kafka:chess_player");
+
+        from("direct:errorHandler")
+                .routeId("error-handler-route")
+                .process(exchange -> {
+                    Exception exception = exchange.getProperty(Exchange.EXCEPTION_CAUGHT, Exception.class);
+                    String failedEndpoint = exchange.getProperty(Exchange.FAILURE_ENDPOINT, String.class);
+                    Integer httpStatus = exchange.getIn().getHeader(Exchange.HTTP_RESPONSE_CODE, Integer.class);
+                    String requestBody = exchange.getIn().getBody(String.class);
+
+                    log.error("Error occurred:");
+                    log.error(" - Exception: {}", exception != null ? exception.getMessage() : "Unknown");
+                    log.error(" - HTTP Status: {}", httpStatus != null ? httpStatus : "N/A");
+                    log.error(" - Failed Endpoint: {}", failedEndpoint);
+                    log.error(" - Original Request Body: {}", requestBody);
+
+                    exchange.getMessage().setBody(Map.of(
+                            "status", "error",
+                            "message", exception != null ? exception.getMessage() : "An unexpected error occurred",
+                            "httpStatus", httpStatus != null ? httpStatus : "N/A",
+                            "failedEndpoint", failedEndpoint
+                    ));
+                })
+                .marshal().json()
+                .log("Error response sent to the caller: ${body}")
+                .to("log:error?level=ERROR");
     }
 }

@@ -1,4 +1,4 @@
-package link.yauritux.camelservicepoc.bean;
+package link.yauritux.camelservicepoc.processor;
 
 import link.yauritux.camelservicepoc.dto.ChessPlayerStatistic;
 import link.yauritux.camelservicepoc.dto.ChessPlayerSummary;
