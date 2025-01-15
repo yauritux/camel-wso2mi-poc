@@ -45,10 +45,19 @@ public class WebServiceRoute extends RouteBuilder {
                     exchange.setProperty("time_ms", timeMs);
                     exchange.getMessage().setHeader("time_ms", timeMs);
                 })
-                .setHeader("data", body())
-                .setBody(simple("INSERT INTO camel_archive_db(id, data, time_ms) values(uuid_generate_v4(), cast(:?data as json), :?time_ms)"))
-                .to("jdbc:dataSource?useHeadersAsParameters=true")
+                .multicast().parallelProcessing()
+                .to("direct:jdbcInsert", "direct:sendToKafka")
                 .end()
                 .setBody(simple("${body}"));
+
+        from("direct:jdbcInsert")
+                .routeId("jdbc-insert-route")
+                .setHeader("data", body())
+                .setBody(simple("INSERT INTO camel_archive_db(id, data, time_ms) values(uuid_generate_v4(), cast(:?data as json), :?time_ms)"))
+                .to("jdbc:dataSource?useHeadersAsParameters=true");
+
+        from("direct:sendToKafka")
+                .routeId("kafka-producer-route")
+                .to("kafka:chess_player");
     }
 }
