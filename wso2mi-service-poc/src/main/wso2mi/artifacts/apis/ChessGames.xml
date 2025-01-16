@@ -5,6 +5,35 @@
             <call description="Fetch Chess Game Players">
                 <endpoint key="fetchChessPlayers" />
             </call>
+            <payloadFactory media-type="json" template-type="default">
+                <format>$1</format>
+                <args>
+                    <arg expression="$.players" evaluator="json" />
+                </args>
+            </payloadFactory>
+            <enrich description="">
+                <source clone="true" type="body" />
+                <target action="replace" type="property" property="transformedResponse" />
+            </enrich>
+            <script language="js"><![CDATA[var responsePayload = JSON.parse(mc.getProperty("transformedResponse"));
+var characters = 'abcdefghijklmnopqrstuvwxyz';
+var randomChar = characters.charAt(Math.floor(Math.random() * characters.length));
+var filteredResponse = null;
+for (var i = 0; i < responsePayload.length; i++) {
+   if (responsePayload[i].startsWith(randomChar)) {
+       filteredResponse = responsePayload[i];
+       break;
+   }
+}
+if (filteredResponse != null) {
+   mc.setPayloadJSON(filteredResponse);
+} else {
+   mc.setPayloadJSON([]);
+}
+mc.setProperty("filteredResponse", JSON.stringify(filteredResponse));]]></script>
+            <log category="INFO" level="custom">
+                <property name="responseOutput" expression="get-property('filteredResponse')" />
+            </log>
             <respond description="List of Chess Game Players" />
         </inSequence>
         <faultSequence>
