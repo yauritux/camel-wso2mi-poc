@@ -82,7 +82,7 @@ public class WebServiceRoute extends RouteBuilder {
         from("direct:jdbcInsert")
                 .routeId("jdbc-insert-route")
                 .setHeader("data", body())
-                .setBody(simple("INSERT INTO camel_archive_db(id, data, time_ms) values(uuid_generate_v4(), cast(:?data as json), :?time_ms)"))
+                .setBody(simple("INSERT INTO camel_write_db(id, data, time_ms) values(uuid_generate_v4(), cast(:?data as json), :?time_ms)"))
                 .to("jdbc:dataSource?useHeadersAsParameters=true");
 
         from("direct:sendToKafka")

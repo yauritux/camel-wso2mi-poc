@@ -17,7 +17,7 @@ public class PlayerFilteringProcessor {
         var randomPrefix = RandomAlpha.randomChar();
         return chessPlayer.getPlayers().stream()
                 .filter(username -> username.charAt(0) == randomPrefix)
-                .limit(5)
+                .limit(1)
                 .toList();
     }
 }
