@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<api context="/api/v1/games" name="ChessGames" xmlns="http://ws.apache.org/ns/synapse">
+    <resource methods="GET" uri-template="/">
+        <inSequence>
+            <call description="Fetch Chess Game Players">
+                <endpoint key="fetchChessPlayers" />
+            </call>
+            <respond description="List of Chess Game Players" />
+        </inSequence>
+        <faultSequence>
+        </faultSequence>
+    </resource>
+</api>
