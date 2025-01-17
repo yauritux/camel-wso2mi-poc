@@ -28,13 +28,33 @@ for (var i = 0; i < responsePayload.length; i++) {
 if (filteredResponse != null) {
    mc.setPayloadJSON(filteredResponse);
 } else {
-   mc.setPayloadJSON([]);
+   mc.setPayloadJSON("");
 }
-mc.setProperty("filteredResponse", JSON.stringify(filteredResponse));]]></script>
+filteredResponse = filteredResponse.replace(/"/g, '');
+mc.setProperty("filteredResponse", filteredResponse);
+mc.setProperty("filteredResponseType", typeof filteredResponse);]]></script>
             <log category="INFO" level="custom">
-                <property name="responseOutput" expression="get-property('filteredResponse')" />
+                <property name="selectedPlayer" expression="get-property('filteredResponse')" />
+                <property name="selectedPlayerType"
+                    expression="get-property('filteredResponseType')" />
             </log>
-            <respond description="List of Chess Game Players" />
+            <property name="uri.var.username" scope="default" type="STRING"
+                expression="fn:concat('', get-property('filteredResponse'))" />
+            <log category="INFO" level="custom">
+                <property name="selectedPlayerUsername"
+                    expression="get-property('uri.var.username')" />
+            </log>
+            <log category="INFO" level="custom">
+                <property name="playerSummaryUrl"
+                    expression="fn:concat('https://api.chess.com/pub/player/', get-property('uri.var.username'), '/stats')" />
+            </log>
+            <call>
+                <endpoint>
+                    <http method="GET"
+                        uri-template="https://api.chess.com/pub/player/{uri.var.username}/stats" />
+                </endpoint>
+            </call>
+            <respond description="Player Summary" />
         </inSequence>
         <faultSequence>
         </faultSequence>
