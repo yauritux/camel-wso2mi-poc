@@ -51,34 +51,19 @@ mc.setProperty("filteredResponseType", typeof filteredResponse);]]></script>
                 </endpoint>
             </call>
             <payloadFactory media-type="json" template-type="default">
-                <format>{ "username": "$1", "game_statistic": $2 }</format>
+                <format>{
+                    "username": "$1", "game_statistic": $2 }</format>
                 <args>
                     <arg expression="get-property('uri.var.username')" evaluator="xml" />
                     <arg expression="$.*" evaluator="json" />
                 </args>
             </payloadFactory>
-            <!-- Clone the message context to send to Kafka and PostgreSQL in parallel -->
-            <clone continueParent="true">
-                <target>
-                    <sequence>
-                        <!-- Send the payload to Kafka -->
-                        <call>
-                            <endpoint>
-                                <address uri="kafka:wso2_chess_player?bootstrap.servers=localhost:9094,localhost:9194,localhost:9294"/>
-                            </endpoint>
-                        </call>
-                    </sequence>
-                </target>
-                <!-- <target>
-                    <sequence>
-                        <call>
-                            <endpoint>
-                                <address uri="jdbc:/myDataSource/myTable"/>
-                            </endpoint>
-                        </call>
-                    </sequence>
-                </target> -->
-            </clone>
+            <kafkaTransport.publishMessages configKey="KafkaConnection">
+                <keySchemaSoftDeleted>false</keySchemaSoftDeleted>
+                <valueSchemaSoftDeleted>false</valueSchemaSoftDeleted>
+                <topic>wso2_chess_player</topic>
+                <partitionNo>0</partitionNo>
+            </kafkaTransport.publishMessages>
             <respond description="Player Summary" />
         </inSequence>
         <faultSequence>

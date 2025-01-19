@@ -32,6 +32,30 @@ enabled = false
 # sender_enable = true
 # listener_enable = true
 
+[[transport.kafka]]
+name = "kafka"
+senderEnabled = true
+receiverEnabled = true
+
+[transport.kafka.producer]
+bootstrap.servers = "localhost:9094,localhost:9194,localhost:9294"
+acks = "all"
+retries = 0
+batch.size = 16384
+linger.ms = 1
+buffer.memory = 33554432
+key.serializer = "org.apache.kafka.common.serialization.StringSerializer"
+value.serializer = "org.apache.kafka.common.serialization.StringSerializer"
+
+[transport.kafka.consumer]
+bootstrap.servers = "localhost:9094,localhost:9194,localhost:9294"
+group.id = "wso2-mi-group"
+enable.auto.commit = true
+auto.commit.interval.ms = 1000
+session.timeout.ms = 30000
+key.deserializer = "org.apache.kafka.common.serialization.StringDeserializer"
+value.deserializer = "org.apache.kafka.common.serialization.StringDeserializer"
+
 # [[transport.jms.sender]]
 # name = "myQueueSender"
 # parameter.initial_naming_factory = "org.apache.activemq.jndi.ActiveMQInitialContextFactory"
