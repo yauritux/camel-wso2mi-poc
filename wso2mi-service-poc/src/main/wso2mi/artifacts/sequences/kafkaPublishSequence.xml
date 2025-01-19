@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sequence name="kafkaPublishSequence" trace="disable" xmlns="http://ws.apache.org/ns/synapse">
+    <kafkaTransport.publishMessages configKey="KafkaConnection">
+        <keySchemaSoftDeleted>false</keySchemaSoftDeleted>
+        <valueSchemaSoftDeleted>false</valueSchemaSoftDeleted>
+        <topic>wso2_chess_player</topic>
+        <partitionNo>0</partitionNo>
+    </kafkaTransport.publishMessages>
+</sequence>

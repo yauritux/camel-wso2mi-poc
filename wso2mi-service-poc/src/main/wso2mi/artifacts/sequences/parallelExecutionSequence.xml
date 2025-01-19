@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sequence name="dbInsertSequence" trace="disable" xmlns="http://ws.apache.org/ns/synapse">
+    <dbreport>
+        <connection>
+            <pool>
+                <driver>org.postgresql.Driver</driver>
+                <url>jdbc:postgresql://localhost:5432/eipoc</url>
+                <user>postgres</user>
+                <password>tux123</password>
+            </pool>
+        </connection>
+        <statement>
+            <sql>INSERT INTO wso2mi_write_db (data) VALUES (?::json)</sql>
+            <parameter expression="json-eval($.)" type="VARCHAR"/>
+        </statement>
+    </dbreport>            
+</sequence>

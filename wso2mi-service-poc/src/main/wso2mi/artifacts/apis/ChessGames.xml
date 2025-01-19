@@ -63,26 +63,11 @@ mc.setProperty("filteredPlayerType", typeof filteredPlayer);
             <log category="INFO" level="custom">
                 <property name="insertedResponse" expression="get-property('filteredResponse')" />
             </log>
-            <dbreport>
-                <connection>
-                    <pool>
-                        <driver>org.postgresql.Driver</driver>
-                        <url>jdbc:postgresql://localhost:5432/eipoc</url>
-                        <user>postgres</user>
-                        <password>tux123</password>
-                    </pool>
-                </connection>
-                <statement>
-                    <sql>INSERT INTO wso2mi_write_db (data) VALUES (?::json)</sql>
-                    <parameter expression="json-eval($.)" type="VARCHAR"/>
-                </statement>
-            </dbreport>            
-            <kafkaTransport.publishMessages configKey="KafkaConnection">
-                <keySchemaSoftDeleted>false</keySchemaSoftDeleted>
-                <valueSchemaSoftDeleted>false</valueSchemaSoftDeleted>
-                <topic>wso2_chess_player</topic>
-                <partitionNo>0</partitionNo>
-            </kafkaTransport.publishMessages>
+
+            <!-- Call parallel sequences for DB insertion and Kafka publishing -->
+            <sequence key="dbInsertSequence" />
+            <sequence key="kafkaPublishSequence" />
+
             <respond description="Player Summary" />
         </inSequence>
         <faultSequence>
