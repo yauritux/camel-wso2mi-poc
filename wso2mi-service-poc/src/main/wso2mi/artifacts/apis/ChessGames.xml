@@ -30,16 +30,18 @@ if (filteredResponse != null) {
 } else {
    mc.setPayloadJSON("");
 }
-filteredResponse = filteredResponse.replace(/"/g, '');
 mc.setProperty("filteredResponse", filteredResponse);
-mc.setProperty("filteredResponseType", typeof filteredResponse);]]></script>
+var filteredPlayer = filteredResponse.replace(/"/g, '');
+mc.setProperty("filteredPlayer", filteredPlayer)
+mc.setProperty("filteredPlayerType", typeof filteredPlayer);
+]]></script>
             <log category="INFO" level="custom">
-                <property name="selectedPlayer" expression="get-property('filteredResponse')" />
+                <property name="selectedPlayer" expression="get-property('filteredPlayer')" />
                 <property name="selectedPlayerType"
-                    expression="get-property('filteredResponseType')" />
+                    expression="get-property('filteredPlayerType')" />
             </log>
             <property name="uri.var.username" scope="default" type="STRING"
-                expression="fn:concat('', get-property('filteredResponse'))" />
+                expression="fn:concat('', get-property('filteredPlayer'))" />
             <log category="INFO" level="custom">
                 <property name="playerSummaryUrl"
                     expression="fn:concat('https://api.chess.com/pub/player/', get-property('uri.var.username'), '/stats')" />
@@ -58,6 +60,23 @@ mc.setProperty("filteredResponseType", typeof filteredResponse);]]></script>
                     <arg expression="$.*" evaluator="json" />
                 </args>
             </payloadFactory>
+            <log category="INFO" level="custom">
+                <property name="insertedResponse" expression="get-property('filteredResponse')" />
+            </log>
+            <dbreport>
+                <connection>
+                    <pool>
+                        <driver>org.postgresql.Driver</driver>
+                        <url>jdbc:postgresql://localhost:5432/eipoc</url>
+                        <user>postgres</user>
+                        <password>tux123</password>
+                    </pool>
+                </connection>
+                <statement>
+                    <sql>INSERT INTO wso2mi_write_db (data) VALUES (?::json)</sql>
+                    <parameter expression="json-eval($.)" type="VARCHAR"/>
+                </statement>
+            </dbreport>            
             <kafkaTransport.publishMessages configKey="KafkaConnection">
                 <keySchemaSoftDeleted>false</keySchemaSoftDeleted>
                 <valueSchemaSoftDeleted>false</valueSchemaSoftDeleted>
