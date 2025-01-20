@@ -13,9 +13,11 @@ camel:
   component:
     kafka:
       brokers: localhost:9094,localhost:9194,localhost:9294
-      retries: 3
+#      retries: 3
       health-check-producer-enabled: true
       request-required-acks: all
+#      compression-codec: snappy
+#      linger-ms: 10
 
 chess:
   api:
