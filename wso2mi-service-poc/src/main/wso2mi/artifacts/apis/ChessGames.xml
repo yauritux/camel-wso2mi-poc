@@ -49,7 +49,16 @@ mc.setProperty("filteredPlayerType", typeof filteredPlayer);
             <call>
                 <endpoint>
                     <http method="GET"
-                        uri-template="https://api.chess.com/pub/player/{uri.var.username}/stats" />
+                        uri-template="https://api.chess.com/pub/player/{uri.var.username}/stats">
+                        <suspendOnFailure>
+                            <initialDuration>-1</initialDuration>
+                            <progressionFactor>1.0</progressionFactor>
+                        </suspendOnFailure>
+                        <markForSuspension>
+                            <retriesBeforeSuspension>1</retriesBeforeSuspension>
+                            <retryDelay>3000</retryDelay>
+                        </markForSuspension>
+                    </http>
                 </endpoint>
             </call>
             <payloadFactory media-type="json" template-type="default">
