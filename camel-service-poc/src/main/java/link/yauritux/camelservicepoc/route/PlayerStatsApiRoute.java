@@ -10,6 +10,10 @@ import org.apache.camel.model.dataformat.JsonLibrary;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
 /**
  * @author Yauri Attamimi
  * @version 1.0
@@ -25,7 +29,8 @@ public class PlayerStatsApiRoute extends RouteBuilder {
         // Define the retry mechanism for 429 responses
         onException(HttpOperationFailedException.class)
                 .onWhen(exchange -> {
-                    HttpOperationFailedException exception = exchange.getProperty(Exchange.EXCEPTION_CAUGHT, HttpOperationFailedException.class);
+                    HttpOperationFailedException exception = exchange.getProperty(
+                            Exchange.EXCEPTION_CAUGHT, HttpOperationFailedException.class);
                     return exception != null && exception.getStatusCode() == 429; // Retry only for HTTP 429
                 })
                 .maximumRedeliveries(1) // Retry 1 time
@@ -52,7 +57,7 @@ public class PlayerStatsApiRoute extends RouteBuilder {
                     String username = exchange.getProperty("username", String.class);
                     exchange.getIn().setHeader("username", username);
                 })
-                .toD(chessApiUrl + "/player/${header.username}/stats?httpMethod=GET")
+                .toD(chessApiUrl + "/player/${header.username}/stats?httpMethod=GET&useAsync=True")
 //                .recipientList(simple(chessApiUrl + "/player/${header.username}/stats?httpMethod=GET"))
                 .unmarshal().json(JsonLibrary.Jackson, ChessPlayerStatistic.class)
                 .bean(PlayerSummaryProcessor.class)
