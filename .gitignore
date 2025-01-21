@@ -7,6 +7,7 @@ eipoc-data/**
 
 ## Python ##
 **/__pycache__/**
+perf-test/__pycache__/**
 
 
 ### Intellij ###

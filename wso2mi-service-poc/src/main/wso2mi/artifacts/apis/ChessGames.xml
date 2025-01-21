@@ -73,10 +73,19 @@ mc.setProperty("filteredPlayerType", typeof filteredPlayer);
                 <property name="insertedResponse" expression="get-property('filteredResponse')" />
             </log>
 
-            <!-- Call parallel sequences for DB insertion and Kafka publishing -->
-            <sequence key="dbInsertSequence" />
-            <sequence key="kafkaPublishSequence" />
-
+            <clone continueParent="true" id="save-and-publish">
+                <!-- Call parallel sequences for DB insertion and Kafka publishing -->
+                <target>
+                    <sequence>
+                        <sequence key="dbInsertSequence" />
+                    </sequence>
+                </target>
+                <target>
+                    <sequence>
+                        <sequence key="kafkaPublishSequence" />
+                    </sequence>
+                </target>
+            </clone>
             <respond description="Player Summary" />
         </inSequence>
         <faultSequence>
