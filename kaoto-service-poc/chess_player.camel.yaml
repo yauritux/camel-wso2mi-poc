@@ -21,9 +21,14 @@
         - setHeader:
             constant: application/json
             name: Accept
+        - setHeader:
+            name: Content-Type
+            constant: application/json
         - to:
             id: to-4055
             uri: https://api.chess.com/pub/titled/GM?bridgeEndpoint=true&throwExceptionOnFailure=false&followRedirects=true
+        - log:
+            message: "received response: ${body}"
         - transform:
             id: transform-1657
             expression:
@@ -66,17 +71,35 @@
         - setHeader:
             constant: application/json
             name: Accept
-        - toD:
-            id: to-4055
-            uri: https://api.chess.com/pub/player/${header.selectedPlayer}/stats?bridgeEndpoint=true&throwExceptionOnFailure=false&followRedirects=true
-        - log:
-            message: "Player stats response: ${body}"
-        - setBody:
-            simple: |
-              {
-                "username": "${header.selectedPlayer}",
-                "game_statistic": "${body}"
-              }
+        - doTry:
+            id: doTry-2941
+            steps:
+              - toD:
+                  id: to-3058
+                  uri: https://api.chess.com/pub/player/${header.selectedPlayer}/stats?bridgeEndpoint=true&throwExceptionOnFailure=false&followRedirects=true
+              - log:
+                  message: "Player stats response: ${body}"
+              - setBody:
+                  simple: |
+                    {
+                      "username": "${header.selectedPlayer}",
+                      "game_statistic": "${body}"
+                    }
+            doCatch:
+              - id: doCatch-3781
+                steps:
+                  - delay:
+                      constant: "1000"
+                  - toD:
+                      id: to-3839
+                      uri: https://api.chess.com/pub/player/${header.selectedPlayer}/stats?bridgeEndpoint=true&throwExceptionOnFailure=false&followRedirects=true
+                exception:
+                  - org.apache.camel.http.base.HttpOperationFailedException
+                onWhen:
+                  simple: "${exception.responseCode} == 429"
+            doFinally:
+              id: doFinally-2720
+              steps: []
         - log:
             message: "Final response body: ${body}"
         - to:
