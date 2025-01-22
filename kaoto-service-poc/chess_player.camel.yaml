@@ -51,8 +51,7 @@
                     }
                   }                  
 
-                  var players = jsonResponse;
-                  var selectedPlayer = "tux";
+                  var players = jsonResponse; var selectedPlayer = "tux";
 
                   for (var i = 0; i < players.length; i++) {
                     if (players[i].startsWith(randomChar)) {
@@ -73,10 +72,16 @@
         - log:
             message: "Player stats response: ${body}"
         - setBody:
-            simple: >
+            simple: |
               {
                 "username": "${header.selectedPlayer}",
                 "game_statistic": "${body}"
               }
         - log:
             message: "Final response body: ${body}"
+        - to:
+            id: to-kafka
+            uri: kafka
+            parameters:
+              brokers: localhost:9094,localhost:9194,localhost:9294
+              topic: chess_player
