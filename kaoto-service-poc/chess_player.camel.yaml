@@ -62,6 +62,13 @@
                   }
 
                   exchange.getIn().setHeader("selectedPlayer", selectedPlayer);
-                  exchange.getIn().setBody(selectedPlayer);
         - log:
             message: "selected player: ${header.selectedPlayer}"
+        - setHeader:
+            constant: application/json
+            name: Accept
+        - toD:
+            id: to-4055
+            uri: https://api.chess.com/pub/player/${header.selectedPlayer}/stats?bridgeEndpoint=true&throwExceptionOnFailure=false&followRedirects=true
+        - log:
+            message: "${body}"
