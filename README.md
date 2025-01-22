@@ -30,4 +30,5 @@ The POC includes the following connectors:
 - **Database**: PostgreSQL
 - **Message-Oriented Middleware (MoM)**: Kafka
 - **HTTP**: RESTful API
+- **File**: File Connector
 
