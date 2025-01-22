@@ -1,0 +1,67 @@
+- beans:
+    - name: randomCharBean
+      type: link.yauritux.RandomCharBean
+- route:
+    id: route-chess-player
+    from:
+      id: from-9588
+      uri: rest
+      parameters:
+        method: get
+        path: /
+      steps:
+        - bean:
+            method: generateRandomChar
+            ref: randomCharBean
+        - setHeader:
+            name: randomChar
+            simple: ${body}
+        - log:
+            message: "Generated random character: ${header.randomChar}"
+        - setHeader:
+            constant: application/json
+            name: Accept
+        - to:
+            id: to-4055
+            uri: https://api.chess.com/pub/titled/GM?bridgeEndpoint=true&throwExceptionOnFailure=false&followRedirects=true
+        - transform:
+            id: transform-1657
+            expression:
+              jsonpath:
+                expression: $.players
+        - script:
+            expression:
+              js:
+                expression: >-
+                  var randomChar = exchange.getIn().getHeader("randomChar");
+
+                  var body = exchange.getIn().getBody();
+
+                  exchange.getIn().setHeader("rawBody", JSON.stringify(body));
+
+                  var jsonResponse = body;
+
+                  if (typeof body === 'string') {
+                    try {
+                      jsonResponse = JSON.parse(body);
+                      exchange.getIn().setHeader("parsedBody", JSON.stringify(jsonResponse));
+                    } catch (e) {
+                      exchange.getIn().setHeader("errorParsing", "Error parsing JSON");
+                      throw e;
+                    }
+                  }                  
+
+                  var players = jsonResponse;
+                  var selectedPlayer = "tux";
+
+                  for (var i = 0; i < players.length; i++) {
+                    if (players[i].startsWith(randomChar)) {
+                      selectedPlayer = players[i];
+                      break;
+                    }
+                  }
+
+                  exchange.getIn().setHeader("selectedPlayer", selectedPlayer);
+                  exchange.getIn().setBody(selectedPlayer);
+        - log:
+            message: "selected player: ${header.selectedPlayer}"
