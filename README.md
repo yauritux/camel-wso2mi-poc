@@ -10,6 +10,8 @@ This Proof of Concept (POC) aims to perform a comparison and benchmarking betwee
 - **Apache Camel Version**: 4.9.0
 - **Spring Boot Version**: 3+
 - **WSO2 Micro Integrator Version**: 4.3.0
+- **Kaoto**: 2.4.0
+- **Camel JBang**: 0.122.0
 
 ## Enterprise Integration Patterns
 
