@@ -71,4 +71,12 @@
             id: to-4055
             uri: https://api.chess.com/pub/player/${header.selectedPlayer}/stats?bridgeEndpoint=true&throwExceptionOnFailure=false&followRedirects=true
         - log:
-            message: "${body}"
+            message: "Player stats response: ${body}"
+        - setBody:
+            simple: >
+              {
+                "username": "${header.selectedPlayer}",
+                "game_statistic": "${body}"
+              }
+        - log:
+            message: "Final response body: ${body}"
