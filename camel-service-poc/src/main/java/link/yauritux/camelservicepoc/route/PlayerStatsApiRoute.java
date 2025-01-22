@@ -10,9 +10,7 @@ import org.apache.camel.model.dataformat.JsonLibrary;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * @author Yauri Attamimi
@@ -53,6 +51,18 @@ public class PlayerStatsApiRoute extends RouteBuilder {
 
         from("direct:callChessPlayerStats")
                 .routeId("chess-player-stats-route")
+                .threads()
+//                .executorService(Executors.newVirtualThreadPerTaskExecutor())
+                .executorService(new ThreadPoolExecutor(
+                        50,
+                        // Max pool size to handle 500 concurrent tasks
+                        250,
+                        60L, TimeUnit.SECONDS,
+                        // Small queue to avoid excessive queuing of requests, keep queuing minimal to prioritize thread execution.
+                        new LinkedBlockingQueue<Runnable>(50),
+                        // Backpressure when overloaded
+                        new ThreadPoolExecutor.CallerRunsPolicy()
+                ))
                 .process(exchange -> {
                     String username = exchange.getProperty("username", String.class);
                     exchange.getIn().setHeader("username", username);

@@ -53,17 +53,6 @@ public class WebServiceRoute extends RouteBuilder {
 
         from("direct:fetchChessPlayers")
                 .routeId("chess-api-route")
-                .threads()
-                .executorService(new ThreadPoolExecutor(
-                        50,
-                        // Max pool size to handle 500 concurrent tasks
-                        250,
-                        60L, TimeUnit.SECONDS,
-                        // Small queue to avoid excessive queuing of requests, keep queuing minimal to prioritize thread execution.
-                        new LinkedBlockingQueue<Runnable>(50),
-                        // Backpressure when overloaded
-                        new ThreadPoolExecutor.CallerRunsPolicy()
-                ))
                 .process(exchange -> {
                     long start = System.currentTimeMillis();
                     exchange.setProperty("startTime", start);
@@ -75,9 +64,7 @@ public class WebServiceRoute extends RouteBuilder {
                 .split(body())
                 .log(chessApiUrl + "/player/${body}/stats")
                 .setProperty("username", simple("${body}"))
-//                .throttle(50)
                 .to("direct:callChessPlayerStats")
-//                .setBody(simple("${body}"))
                 .end();
     }
 }
