@@ -8,11 +8,13 @@ spring:
     username: ${DB_USER}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
 
 camel:
   component:
     kafka:
-      brokers: localhost:9094,localhost:9194,localhost:9294
+      brokers: ${KAFKA_BOOTSTRAP_SERVERS}
 #      retries: 3
       health-check-producer-enabled: true
       request-required-acks: all
