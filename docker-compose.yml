@@ -38,12 +38,14 @@ services:
       - KAFKA_KRAFT_CLUSTER_ID=r4zt_wrqTRuT7W2NJsB_GA
     ports:
       - 9094:9094
+
   kafka-2:
     image: bitnami/kafka:3.3
     container_name: kafka-2
     networks:
       - eipocnet
     environment:
+      - KAFKA_CREATE_TOPICS=chess_player:10:2,wso2_chess_player:10:2
       - KAFKA_CFG_NODE_ID=1
       - KAFKA_CFG_PROCESS_ROLES=controller,broker
       - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
@@ -61,6 +63,7 @@ services:
     networks:
       - eipocnet
     environment:
+      - KAFKA_CREATE_TOPICS=chess_player:10:2,wso2_chess_player:10:2
       - KAFKA_CFG_NODE_ID=2
       - KAFKA_CFG_PROCESS_ROLES=controller,broker
       - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
@@ -82,6 +85,23 @@ services:
     environment:
       - KAFKA_CLUSTERS_0_BOOTSTRAP_SERVERS=kafka-1:9092
       - KAFKA_CLUSTERS_0_NAME=r4zt_wrqTRuT7W2NJsB_GA
+
+  camel-service-poc:
+    build:
+      context: ./camel-service-poc
+      dockerfile: Dockerfile
+    container_name: camel-service-poc
+    networks:
+      - eipocnet
+    depends_on:
+      - eipoc-db
+      - kafka-1
+      - kafka-2
+      - kafka-3
+    ports:
+      - "9000:9000"
+    env_file:
+      - .env
 
 networks:
   eipocnet:
